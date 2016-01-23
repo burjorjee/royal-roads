@@ -31,7 +31,7 @@ def visualizeRun(avgFitnessHist, maxFitnessHist, gen=None, force=False):
         f.canvas.draw()
         f.show()
 
-def visualizeMissteps(maxFitnessHist, minMisstepsHist, gen, force=False):
+def visualizeMissteps(xLabel, maxFitnessHist, minMisstepsHist, gen, force=False):
     f = figure(3)
     if gen == 0:
         clf()
@@ -48,6 +48,7 @@ def visualizeMissteps(maxFitnessHist, minMisstepsHist, gen, force=False):
         ax.set_ylabel('missteps', color='b')
         bx.set_ylabel('fitness', color='r', rotation=270)
         bx.set_yticks([0, 20, 40, 60, 80, 100])
+        ax.set_xlabel(xLabel)
         f.canvas.draw()
         f.show()
 
@@ -136,7 +137,7 @@ def evolve(fitnessFunction,
 
         if visualize:
             visualizeRun(avgFitnessHist, maxFitnessHist, gen=gen)
-            visualizeMissteps(maxFitnessHist, minMisstepsHist, gen=gen)
+            visualizeMissteps("generations", maxFitnessHist, minMisstepsHist, gen=gen)
             ylabel('generations')
 
         print "\ngen = %.3d   avg fitness = %3.3f   fitness std = %3.3f   maxfitness = %3.3f" % (gen, avgFitnessHist[gen], sigma, maxFitnessHist[gen])
@@ -198,7 +199,7 @@ def evolve(fitnessFunction,
     avgFitnessHist[gen] = fitnessVals.mean()
     if visualize:
         visualizeRun(avgFitnessHist, maxFitnessHist, gen=gen, force=True)
-        visualizeMissteps(maxFitnessHist, minMisstepsHist, gen=gen, force=True)
+        visualizeMissteps("generations", maxFitnessHist, minMisstepsHist, gen=gen, force=True)
     else:
         return maxFitnessHist, minMisstepsHist
 
@@ -264,10 +265,9 @@ def anneal(fitnessFunction,
 
         print u"\nperiod %5d, T = %1.5f, p(\u0394=-1) = %1.5f, value = %s " % (p, T, math.exp(-1 / T), maxFitnessHist[p])
         if visualize:
-            visualizeMissteps(maxFitnessHist, minMisstepsHist, gen=p)
-            xlabel('periods')
+            visualizeMissteps("periods", maxFitnessHist, minMisstepsHist, gen=p)
     if visualize:
-        visualizeMissteps(maxFitnessHist, minMisstepsHist, gen=p, force=True)
+        visualizeMissteps("periods", maxFitnessHist, minMisstepsHist, gen=p, force=True)
     else:
         return maxFitnessHist, minMisstepsHist
 
