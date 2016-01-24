@@ -1,18 +1,20 @@
-A royal road function in support of the [generative fixation](http://www.cs.brandeis.edu/~kekib/dissertation.html)
-theory of adaptation and the [hypomixability](http://s3.amazonaws.com/burjorjee/.../efficient_hypomixability_elimination.pdf)
+Experiments with a new royal road function (Contingent Parities) that support the [Generative Fixation](http://www.cs.brandeis.edu/~kekib/dissertation.html)
+theory of adaptation and the [Hypomixability](http://s3.amazonaws.com/burjorjee/.../efficient_hypomixability_elimination.pdf)
 theory of sex. 
 
-The royal road function is presented and the behavior of recombinative evolution and simulated annealing is compared in 
-a companion blog post: [When will recombinative evolution outperform local search](http://evorithmics.org)
+A companion blog post ([When will recombinative evolution outperform local search](http://evorithmics.org)) introduces 
+the Contingent Parities Function and compares the behavior of recombinative evolution and simulated annealing.
 
-#### To run simulated annealing:
+Simulated annealing and a genetic algorithm can be run on a contingent parities function as follows:
+ 
+#### Simulated Annealing:
 
 ```python
 import royalroads as rr
 rr.simulatedAnnealing(rngSeed=1)
 ```
 
-#### To run a genetic algorithm:
+#### Genetic Algorithm:
 
 ```python
 import royalroads as rr
