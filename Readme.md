@@ -2,7 +2,7 @@ Experiments with a new royal road function (Contingent Parities) that support th
 theory of adaptation and the [Hypomixability](http://s3.amazonaws.com/burjorjee/.../efficient_hypomixability_elimination.pdf)
 theory of recombination. 
 
-A companion blog post ([When will evolution outperform local search?](http://evorithmics.org)) introduces 
+A companion blog post ([When will evolution outperform local search?](http://blog.evorithmics.org/2015/12/31/when-will-evolution-outperform-local-search/)) introduces 
 Contingent Parities Functions and compares the behavior of recombinative evolution and simulated annealing 
 on a member of this class of fitness function.
 
