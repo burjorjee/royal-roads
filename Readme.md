@@ -1,33 +1,37 @@
 Experiments with a new royal road function (Contingent Parities) that support the [Generative Fixation](http://www.cs.brandeis.edu/~kekib/dissertation.html)
 theory of adaptation and the [Hypomixability](http://s3.amazonaws.com/burjorjee/.../efficient_hypomixability_elimination.pdf)
-theory of sex. 
+theory of recombination. 
 
-A companion blog post ([When will recombinative evolution outperform local search](http://evorithmics.org)) introduces 
-the Contingent Parities Function and compares the behavior of recombinative evolution and simulated annealing.
+A companion blog post ([When will evolution outperform local search?](http://evorithmics.org)) introduces 
+Contingent Parities Functions and compares the behavior of recombinative evolution and simulated annealing 
+on a member of this class of fitness function.
 
-Simulated annealing and a genetic algorithm can be run on a contingent parities function as follows:
+## Usage
+Simulated annealing and a genetic algorithm can be run on a contingent parities function of order 2 and height 100 as follows:
  
 #### Simulated Annealing:
 
 ```python
 import royalroads as rr
-rr.simulatedAnnealing(rngSeed=1)
+rr.SA(rngSeed=1, numPeriods=1000)
 ```
 
 #### Genetic Algorithm:
 
 ```python
 import royalroads as rr
-rr.geneticAlgorithm(rngSeed=1)
+rr.GA(rngSeed=1, numGenerations=1000, useClamping=False)
 ```
 
-#### To compare the performance of the two algorithms on the royal road function:
+#### To compare the performance of the two algorithms on the contingent parities function:
 
 ```python
-import royal roads as rr
+import royalroads as rr
 rr.compareAlgorithms(numRuns=40)
 ```
 
 # Dependencies #
 
+```
 mmh3, matplotlib, joblib
+```
