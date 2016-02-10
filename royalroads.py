@@ -6,49 +6,59 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from joblib import Parallel, delayed
 
-rng = npr.RandomState()
 
-def generateContingentParitiesFunction(order, height):
-    def contingentParitiesFunction(pop, verbose=False):
-        assert(pop.shape[1] == order * height)
+class ContingentParitiesFunction(object):
+    def __init__(self, order, height, numComponents=1):
+        self.order = order
+        self.height = height
+        self.numComponents = numComponents
+        length = order * height * numComponents
+        self.rng = npr.RandomState(seed=1)
+        l = np.arange(length)
+        self.rng.shuffle(l)
+        self.componentLoci = l.reshape((numComponents, -1))
+        self.length = order * height * numComponents
+
+    def eval(self, pop, verbose=False):
+        assert(pop.shape[1] == self.order * self.height * self.numComponents)
         popMissteps = []
         traceAndFitness = []
-        for c in xrange(pop.shape[0]):
+        for i in xrange(pop.shape[0]):
             output = 0
-            ctr = 0
-            length = pop.shape[1]
-            loci = np.arange(length)
-            missteps = []
-            trace = ""
-            while ctr < height:
-                rng.seed(abs(mmh3.hash(trace)))
-                acc = 0
-                trace += "|"
-                for i in xrange(order):
-                    idx = rng.randint(length - (ctr * order + i)) + 1
-                    swap = loci[-idx]
-                    loci[-idx] = loci[ctr * order + i]
-                    loci[ctr * order + i] = swap
-                    trace += "%2d:%s|" % (swap + 1, int(pop[c, swap]))
-                    acc += pop[c, swap]
-                output += acc % 2
+            loci = self.componentLoci.copy()
+            missteps = [[] for j in xrange(self.numComponents)]
+            for c in xrange(self.numComponents):
+                trace = ""
+                for level in xrange(self.height):
+                    self.rng.seed(abs(mmh3.hash(trace)))
+                    acc = 0
+                    trace += "|"
+                    for k in xrange(self.order):
+                        idx = self.rng.randint(self.height * self.order - (level * self.order + k)) + 1
+                        swap = loci[c, -idx]
+                        loci[c, -idx] = loci[c, level * self.order + k]
+                        loci[c, level * self.order + k] = swap
+                        trace += "%2d:%s|" % (swap + 1, int(pop[i, swap]))
+                        acc += pop[i, swap]
+                    output += acc % 2
 
-                if acc % 2 == 0:
-                    missteps.append(ctr + 1)
+                    if acc % 2 == 0:
+                        missteps[c].append(level + 1)
 
-                ctr +=1
             popMissteps.append(missteps)
-            traceAndFitness.append((trace, height - len(missteps)))
+            traceAndFitness.append((trace, self.height * self.numComponents - sum(len(x) for x in missteps)))
         if verbose:
             for t in sorted(traceAndFitness):
                 print "%s   %s " % t
-        return np.array([height - len(missteps) for missteps in popMissteps]), popMissteps
+        # import pdb
+        # pdb.set_trace()
 
-    return contingentParitiesFunction
+        return np.array([self.height * self.numComponents - sum(len(x) for x in missteps) for missteps in popMissteps]), popMissteps
+
+    # return contingentParitiesFunction
 
 
 def evolve(fitnessFunction,
-           length,
            popSize,
            maxGens,
            probMutation,
@@ -73,6 +83,7 @@ def evolve(fitnessFunction,
     """
 
     npr.seed(rngSeed)
+    length = fitnessFunction.length
     flagFreq=0.01
     unflagFreq=0.1
     flagPeriod=60
@@ -86,18 +97,19 @@ def evolve(fitnessFunction,
     pop[npr.rand(popSize, length) < 0.5] = 1
     for gen in xrange(maxGens+1):
 
-        fitnessVals, missteps = fitnessFunction(pop)
+        fitnessVals, missteps = fitnessFunction.eval(pop)
         fitnessVals = np.transpose(fitnessVals)
         maxIndex = fitnessVals.argmax()
         maxFitnessHist[gen] = fitnessVals[maxIndex]
         minMisstepsHist.append(missteps[maxIndex])
         avgFitnessHist[gen] = fitnessVals.mean()
         sigma = np.std(fitnessVals)
+        # import pdb
+        # pdb.set_trace()
 
         if visualize:
             visualizeRun(avgFitnessHist, maxFitnessHist, gen=gen)
-            visualizeMissteps("generations", maxFitnessHist, minMisstepsHist, gen=gen)
-            plt.ylabel('generations')
+            visualizeMissteps("generations", fitnessFunction, maxFitnessHist, minMisstepsHist, gen=gen)
 
         print "\ngen = %.3d   avg fitness = %3.3f   fitness std = %3.3f   maxfitness = %3.3f" % (gen, avgFitnessHist[gen], sigma, maxFitnessHist[gen])
 
@@ -156,13 +168,12 @@ def evolve(fitnessFunction,
     avgFitnessHist[gen] = fitnessVals.mean()
     if visualize:
         visualizeRun(avgFitnessHist, maxFitnessHist, gen=gen, force=True)
-        visualizeMissteps("generations", maxFitnessHist, minMisstepsHist, gen=gen, force=True)
+        visualizeMissteps("generations", fitnessFunction, maxFitnessHist, minMisstepsHist, gen=gen, force=True)
     else:
         return maxFitnessHist, minMisstepsHist
 
 
 def anneal(fitnessFunction,
-           length,
            epochsPerPeriod,
            numPeriods,
            initFitnessDropOfOneAcceptanceProb,
@@ -183,9 +194,9 @@ def anneal(fitnessFunction,
     """
 
     npr.seed(rngSeed)
-    x = npr.rand(1, length) < 0.5
+    x = npr.rand(1, fitnessFunction.length) < 0.5
 
-    fitnessVals, missteps = fitnessFunction(x)
+    fitnessVals, missteps = fitnessFunction.eval(x)
     v = fitnessVals[0]
     ms = missteps[0]
     Tmax = - 1 / math.log(initFitnessDropOfOneAcceptanceProb)
@@ -193,12 +204,12 @@ def anneal(fitnessFunction,
     Tfactor = -math.log(Tmax / Tmin)
     maxFitnessHist = np.zeros(numPeriods + 1)
     minMisstepsHist = [None] * (numPeriods + 1)
-    for p in xrange(numPeriods+1):
+    for p in xrange(numPeriods + 1):
         for i in xrange(epochsPerPeriod):
 
-            m = int(npr.random()*length)
+            m = int(npr.random() * fitnessFunction.length)
             x[0, m] ^= True
-            fitnessVals, missteps = fitnessFunction(x)
+            fitnessVals, missteps = fitnessFunction.eval(x)
             v_new = fitnessVals[0]
             ms_new = missteps[0]
             T = Tmax * math.exp(Tfactor * (p * epochsPerPeriod + i) / (epochsPerPeriod * numPeriods))
@@ -222,9 +233,9 @@ def anneal(fitnessFunction,
 
         print u"\nperiod %5d, T = %1.5f, p(\u0394=-1) = %1.5f, value = %s " % (p, T, math.exp(-1 / T), maxFitnessHist[p])
         if visualize:
-            visualizeMissteps("periods", maxFitnessHist, minMisstepsHist, gen=p)
+            visualizeMissteps("periods", fitnessFunction, maxFitnessHist, minMisstepsHist, gen=p,)
     if visualize:
-        visualizeMissteps("periods", maxFitnessHist, minMisstepsHist, gen=p, force=True)
+        visualizeMissteps("periods", fitnessFunction, maxFitnessHist, minMisstepsHist, gen=p, force=True)
     else:
         return maxFitnessHist, minMisstepsHist
 
@@ -253,30 +264,34 @@ def visualizeRun(avgFitnessHist, maxFitnessHist, gen=None, force=False):
         f.canvas.draw()
         f.show()
 
-def visualizeMissteps(xLabel, maxFitnessHist, minMisstepsHist, gen, force=False):
+def visualizeMissteps(xLabel, cpf, maxFitnessHist, minMisstepsHist, gen, force=False):
     f = plt.figure(3)
     if gen == 0:
         plt.clf()
         plt.hold(False)
-    plt.plot(np.ones(len(minMisstepsHist[gen])) * gen, minMisstepsHist[gen], '.', color='#8080ff')
-    if gen == 0:
         ax = f.axes[0]
-        bx = ax.twinx()
+        ax.twinx()
 
-    plt.hold(True)
+    ax, bx = f.axes
+    ax.plot(np.ones(len(minMisstepsHist[gen][0])) * gen, minMisstepsHist[gen][0], '.', color='#00ff00', markersize=2)
+    ax.hold(True)
+    if len(minMisstepsHist[gen]) == 2:
+        ax.plot(np.ones(len(minMisstepsHist[gen][1])) * gen, np.array(minMisstepsHist[gen][1]) + 0.5, '.', color='#0000ff', markersize=2)
+    elif len(minMisstepsHist[gen]) > 2:
+        raise Exception("visualization of missteps for more than two components is not supported")
+
     if gen % 10 == 0 or force:
-        plt.plot(np.arange(gen), maxFitnessHist[:gen], 'r-')
-        ax, bx = f.axes
-        ax.set_plt.ylabel('missteps', color='b')
-        bx.set_plt.ylabel('fitness', color='r', rotation=270)
-        bx.set_yticks([0, 20, 40, 60, 80, 100])
-        ax.set_plt.xlabel(xLabel)
+        ax.set_ylabel('missteps', color='b')
+        ax.set_ylim([0, cpf.height + 0.5])
+        bx.plot(np.arange(gen), maxFitnessHist[:gen], 'r-')
+        bx.set_ylim([0, cpf.height * cpf.numComponents])
+        bx.set_ylabel('fitness', color='r', rotation=270, labelpad=20)
+        ax.set_xlabel(xLabel)
         f.canvas.draw()
         f.show()
 
 def GA(rngSeed, numGenerations, useClamping=False, visualize=True):
-    return evolve(fitnessFunction=generateContingentParitiesFunction(height=100, order=2),
-                  length=200,
+    return evolve(fitnessFunction=ContingentParitiesFunction(height=100, order=2),
                   popSize=500,
                   maxGens=numGenerations,
                   probMutation=0.004,
@@ -287,8 +302,7 @@ def GA(rngSeed, numGenerations, useClamping=False, visualize=True):
                   visualize=visualize)
 
 def SA(rngSeed, numPeriods, visualize=True):
-    return anneal(fitnessFunction=generateContingentParitiesFunction(height=100, order=2),
-                  length=200,
+    return anneal(fitnessFunction=ContingentParitiesFunction(height=100, order=2),
                   epochsPerPeriod=500,
                   numPeriods=numPeriods,
                   initFitnessDropOfOneAcceptanceProb=0.6,
