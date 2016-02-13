@@ -1,8 +1,8 @@
 Experiments with a new royal road function (Contingent Parities) that support the [Generative Fixation](http://www.cs.brandeis.edu/~kekib/dissertation.html)
-theory of adaptation and the [Hypomixability](http://s3.amazonaws.com/burjorjee/.../efficient_hypomixability_elimination.pdf)
+theory of adaptation and the [Hypomixability](https://s3.amazonaws.com/burjorjee/www/efficient_hypomixability_elimination.pdf)
 theory of recombination. 
 
-A companion blog post ([When will evolution outperform local search?](http://blog.evorithmics.org/2015/12/31/when-will-evolution-outperform-local-search/)) introduces 
+A companion blog post ([When will evolution outperform local search?](http://blog.evorithmics.org/2016/01/31/when-will-evolution-outperform-local-search/)) introduces 
 Contingent Parities Functions and compares the behavior of recombinative evolution and simulated annealing 
 on a member of this class of fitness function.
 
