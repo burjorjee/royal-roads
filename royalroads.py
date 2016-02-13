@@ -273,12 +273,13 @@ def visualizeMissteps(xLabel, cpf, maxFitnessHist, minMisstepsHist, gen, force=F
         ax.twinx()
 
     ax, bx = f.axes
+    # visualize the missteps of the first component
     ax.plot(np.ones(len(minMisstepsHist[gen][0])) * gen, minMisstepsHist[gen][0], '.', color='#0000ff', markersize=2)
     ax.hold(True)
-    if len(minMisstepsHist[gen]) == 2:
+
+    # visualize the missteps of upto one additional component
+    if len(minMisstepsHist[gen]) > 1:
         ax.plot(np.ones(len(minMisstepsHist[gen][1])) * gen, np.array(minMisstepsHist[gen][1]) + 0.5, '.', color='#00ff00', markersize=2)
-    elif len(minMisstepsHist[gen]) > 2:
-        raise Exception("visualization of missteps for more than two components is not supported")
 
     if gen % 10 == 0 or force:
         ax.set_ylabel('missteps', color='b')
