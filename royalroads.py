@@ -267,10 +267,10 @@ def visualizeMissteps(xLabel, maxFitnessHist, minMisstepsHist, gen, force=False)
     if gen % 10 == 0 or force:
         plt.plot(np.arange(gen), maxFitnessHist[:gen], 'r-')
         ax, bx = f.axes
-        ax.set_plt.ylabel('missteps', color='b')
-        bx.set_plt.ylabel('fitness', color='r', rotation=270)
+        ax.set_ylabel('missteps', color='b')
+        bx.set_ylabel('fitness', color='r', rotation=270)
         bx.set_yticks([0, 20, 40, 60, 80, 100])
-        ax.set_plt.xlabel(xLabel)
+        ax.set_xlabel(xLabel)
         f.canvas.draw()
         f.show()
 
